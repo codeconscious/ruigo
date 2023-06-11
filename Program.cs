@@ -42,7 +42,10 @@ foreach (var searchTermHeader in searchTermHeaders)
     foreach (var row in rows.Skip(1)) // Skip the header row.
     {
         var cells = row.ChildNodes;
-        spectreTable.AddRow(cells[0].InnerText, cells[1].InnerText);
+        var term = cells[0].InnerText;
+        var joinedSynonyms = string.Join("　　", cells[1].ChildNodes[0].ChildNodes.Select(n => n.InnerText));
+        spectreTable.AddRow(term, joinedSynonyms);
+        spectreTable.AddEmptyRow();
     }
 
     AnsiConsole.Write(spectreTable);
