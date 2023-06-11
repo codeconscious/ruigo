@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Linq;
 using Spectre.Console;
-using static System.Console;
+using System;
 
 if (args == null || args.Length != 1)
 {
@@ -19,11 +19,11 @@ try
     response = await client.GetStringAsync(fullUrl);
     if (response == null)
     {
-        WriteLine("No response!");
+        AnsiConsole.MarkupLine("[red]A valid response was not received from the server.[/red]");
         return;
     }
 }
-catch (System.Exception e)
+catch (Exception e)
 {
     AnsiConsole.MarkupLine($"[red]Network error: {e.Message}[/]");
     return;
@@ -32,27 +32,31 @@ catch (System.Exception e)
 var htmlDocument = new HtmlDocument();
 htmlDocument.LoadHtml(response);
 var mainDiv = htmlDocument.DocumentNode.SelectSingleNode("//div[@id='main']/div[3]");
-var searchTermHeaders = mainDiv.SelectNodes("//h2[@class='midashigo']"); // There can be multiple.
+var termHeaders = mainDiv.SelectNodes("//h2[@class='midashigo']"); // There can be multiple.
 
-if (searchTermHeaders == null || !searchTermHeaders.Any())
+if (termHeaders?.Any() != true)
 {
     AnsiConsole.MarkupLine($"[yellow]No synonyms found for \"{args[0]}\".[/]");
     return;
 }
 
-foreach (var searchTermHeader in searchTermHeaders)
+foreach (var termHeader in termHeaders)
 {
-    var table = searchTermHeader.NextSibling.NextSibling.ChildNodes[1];
+    var table = termHeader.NextSibling.NextSibling.ChildNodes[1];
     var rows = table.ChildNodes.Where(cn => cn.Name == "tr");
 
     if (!rows.Any())
         continue;
 
-    WriteLine($"\nTITLE: {searchTermHeader.InnerText}");
-
     var spectreTable = new Table();
     spectreTable.AddColumn("単語");
     spectreTable.AddColumn("類語");
+    spectreTable.Width(100);
+    spectreTable.HideHeaders();
+    spectreTable.Border = TableBorder.None;
+    spectreTable.Columns[0].Width(20);
+    spectreTable.Columns[0].Padding(5, 0, 5, 0);
+    spectreTable.AddEmptyRow();
 
     foreach (var row in rows.Skip(1)) // Skip the header row.
     {
