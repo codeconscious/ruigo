@@ -6,25 +6,34 @@ using static System.Console;
 
 if (args == null || args.Length != 1)
 {
-    AnsiConsole.WriteLine("一つの日本語の単語を渡してください。");
+    AnsiConsole.MarkupLine("[yellow]一つの日本語の単語を渡してください。[/]");
     return;
 }
 
 var fullUrl = $"https://thesaurus.weblio.jp/content/{args[0]}";
-var client = new HttpClient();
-var response = await client.GetStringAsync(fullUrl);
 
-if (response == null)
+var client = new HttpClient();
+string? response;
+try
 {
-    WriteLine("No response!");
+    response = await client.GetStringAsync(fullUrl);
+    if (response == null)
+    {
+        WriteLine("No response!");
+        return;
+    }
+}
+catch (System.Exception e)
+{
+    AnsiConsole.MarkupLine($"[red]Network error: {e.Message}[/]");
     return;
 }
 
 var htmlDocument = new HtmlDocument();
 htmlDocument.LoadHtml(response);
-
 var mainDiv = htmlDocument.DocumentNode.SelectSingleNode("//div[@id='main']/div[3]//h2[@class='midashigo']");
 var searchTermHeaders = mainDiv.SelectNodes("//h2[@class='midashigo']"); // There can be multiple.
+
 foreach (var searchTermHeader in searchTermHeaders)
 {
     var table = searchTermHeader.NextSibling.NextSibling.ChildNodes[1];
