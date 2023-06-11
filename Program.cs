@@ -31,8 +31,14 @@ catch (System.Exception e)
 
 var htmlDocument = new HtmlDocument();
 htmlDocument.LoadHtml(response);
-var mainDiv = htmlDocument.DocumentNode.SelectSingleNode("//div[@id='main']/div[3]//h2[@class='midashigo']");
+var mainDiv = htmlDocument.DocumentNode.SelectSingleNode("//div[@id='main']/div[3]");
 var searchTermHeaders = mainDiv.SelectNodes("//h2[@class='midashigo']"); // There can be multiple.
+
+if (searchTermHeaders == null || !searchTermHeaders.Any())
+{
+    AnsiConsole.MarkupLine($"[yellow]No synonyms found for \"{args[0]}\".[/]");
+    return;
+}
 
 foreach (var searchTermHeader in searchTermHeaders)
 {
